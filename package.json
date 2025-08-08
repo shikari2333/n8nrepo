@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "n8n-nodes-langchain": "^1.2.0"
+  }
+}

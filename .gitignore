@@ -1,0 +1,37 @@
+# n8n/self-hosted recommended .gitignore
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# n8n data and runtime files
+n8n_data/
+*.sqlite
+*.log
+*.journal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment and secrets
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VSCode settings
+.vscode/
+
+# Docker
+*.pid
+
+# Ignore workflow output or temp files
+*.bak
+*.tmp
+n8n-workflows-main
+# Ignore local workflow exports
+My workflow (*.json)
