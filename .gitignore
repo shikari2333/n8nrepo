@@ -22,13 +22,13 @@ Thumbs.db
 # Python cache
 __pycache__/
 *.pyc
-
+package.json
 # VSCode settings
 .vscode/
-
+package-lock.json
 # Docker
 *.pid
-
+My workflow (9).json
 # Ignore workflow output or temp files
 *.bak
 *.tmp
