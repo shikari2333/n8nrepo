@@ -1,0 +1,324 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7b9d053a-5f49-46bc-a491-91365cbe956e",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1j9ron6z8yJ_8xDw_PHEzdveISGfskHlDQREFoxtF6zM",
+          "mode": "list",
+          "cachedResultName": "data of n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1j9ron6z8yJ_8xDw_PHEzdveISGfskHlDQREFoxtF6zM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1j9ron6z8yJ_8xDw_PHEzdveISGfskHlDQREFoxtF6zM/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "5e126320-4482-4776-8272-8215772da961",
+      "name": "Google Sheets - Read Rows",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GRLZ27c24DJmamIK",
+          "name": "melbinshere"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// This code will stop the workflow if ANY of the columns in the list are true.\n\n// Define the columns to check.\nconst columnsToCheck = ['cheack', 'sentStatus', 'anotherColumn'];\n\n// Check each column one by one.\nfor (const col of columnsToCheck) {\n  const value = $json[col];\n\n  // If a TRUE value is found in ANY of the columns, stop this row immediately.\n  if (value === true || value === 'TRUE' || value === '✔️') {\n    return []; // Stop processing this item.\n  }\n}\n\n// If the loop finishes, it means no TRUE values were found in any of the\n// specified columns, so the workflow will proceed.\nconst idx = typeof $itemIndex !== 'undefined' ? $itemIndex : (typeof $json.__rowIndex !== 'undefined' ? $json.__rowIndex : 0);\nreturn [{\n  json: {\n    companyName: $json.Company || $json[\"Company Name\"] || $json.companyName || $json[\"company_name\"],\n    companyDescription: $json.companyDescription || $json[\"Company Description\"] || $json[\"company_description\"],\n    emailToSendTo: $json.emailToSendTo || $json[\"Email\"] || $json[\"email\"],\n    rowIndex: idx + 2 // Google Sheets: +2 for 1-based index and header row\n  }\n}];"
+      },
+      "id": "fce6c600-44ac-4fb4-94b9-da7e1bb97243",
+      "name": "Filter & Map Row",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1j9ron6z8yJ_8xDw_PHEzdveISGfskHlDQREFoxtF6zM",
+          "mode": "list",
+          "cachedResultName": "data of n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1j9ron6z8yJ_8xDw_PHEzdveISGfskHlDQREFoxtF6zM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1j9ron6z8yJ_8xDw_PHEzdveISGfskHlDQREFoxtF6zM/edit#gid=0"
+        },
+        "columnToMatchOn": "Company Name",
+        "valueToMatchOn": "={{ $('Filter & Map Row').item.json.companyName }}",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "cheack",
+              "fieldValue": "TRUE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3321041-819d-4fac-9771-7c37206475c8",
+      "name": "Mark as Sent",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        680,
+        420
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GRLZ27c24DJmamIK",
+          "name": "melbinshere"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "ddf5fceb-9fa6-42ea-9ca2-4d42589d39d4",
+      "name": "SplitInBatches1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "={{ $('Parse Gemini JSON').item.json.subject }}",
+        "message": "={{ $('Parse Gemini JSON').item.json.emailBody }}",
+        "toList": "={{ [$('Filter & Map Row').item.json.emailToSendTo] }}",
+        "additionalFields": {}
+      },
+      "id": "d0ca3405-b2f1-4128-8560-c4f5a6d2ed54",
+      "name": "Send Email (Gmail)2",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        680,
+        160
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "2wTNn1iHd0TOPrPl",
+          "name": "melbins"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "waitTime": 300,
+        "unit": "seconds"
+      },
+      "id": "wait-node-id",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const geminiContent = $json.candidates[0].content.parts[0].text;\n\n// Remove any ```json or ``` fences and trim whitespace\nlet jsonString = geminiContent.trim()\n  .replace(/^```(?:json)?\\s*/, '')    // leading ``` or ```json\n  .replace(/\\s*```$/, '');            // trailing ```\n\n// Now parse the clean JSON\nconst emailData = JSON.parse(jsonString);\n\nreturn [{\n  json: {\n    subject: emailData.subject,\n    emailBody: emailData.body\n  }\n}];\n"
+      },
+      "id": "69fca385-1251-4a6d-85db-dbe4187e6187",
+      "name": "Parse Gemini JSON",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        540,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const companyName = $json.companyName;\nconst companyDescription = $json.companyDescription;\n\nconst prompt = `You are an AI assistant that outputs exactly one JSON object with two keys: \"subject\" and \"body\". Both should contain a professional, persuasive, and friendly cold email offering a free custom website demo for the target company. Use clear language and include a few gentle, theme‑appropriate emojis (e.g., 🎉, ✨) plus a small touch of love‑attract emojis (❤️, 💖), but do not use any Markdown or special text formatting like bold or italics.\n\nUse this information:\n- Company Name: ${companyName}\n- Company Description: ${companyDescription}\n- My portfolio: melbinsibi.vercel.app\n\nFollow this structure (each as its own short paragraph for readability):\n\n1. About You: A personal greeting that highlights something unique about their company and praises it (use one theme emoji, e.g., 🎉 for celebrations, 🌿 for wellness, plus maybe one ❤️).\n2. How a Website Can Impress: A brief description of how a modern, engaging website can showcase their events/services and drive more bookings or leads (include an emoji like ✨ or 🚀).\n3. Free Demo Offer: A clear offer to build a free custom demo website concept, with your portfolio link and a small loving emoji (💖).\n4. Next Steps: A small closing line: “If you’re interested, we can talk more about the website.” with a friendly emoji (😊).\n\nYour response must be only the JSON object—no explanation, no code fences.`;\n\nconst body = {\n  contents: [\n    {\n      parts: [\n        {\n          text: prompt\n        }\n      ]\n    }\n  ]\n};\n\nreturn { json: { body: body } };\n"
+      },
+      "id": "6819c546-3f03-40b8-90b6-e07c792faccc",
+      "name": "Construct Gemini Request",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBUbjp5HNkNVMz0FAk4JLXD8t3p2QM5_2o",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={{ $('Construct Gemini Request').item.json.body }}"
+      },
+      "id": "384954e1-508b-48b1-9722-63c1f469ad9c",
+      "name": "Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        280,
+        300
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets - Read Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets - Read Rows": {
+      "main": [
+        [
+          {
+            "node": "SplitInBatches1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter & Map Row": {
+      "main": [
+        [
+          {
+            "node": "Construct Gemini Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Sent": {
+      "main": [
+        [
+          {
+            "node": "SplitInBatches1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SplitInBatches1": {
+      "main": [
+        [
+          {
+            "node": "Filter & Map Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email (Gmail)2": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Mark as Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Gemini JSON": {
+      "main": [
+        [
+          {
+            "node": "Send Email (Gmail)2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construct Gemini Request": {
+      "main": [
+        [
+          {
+            "node": "Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini": {
+      "main": [
+        [
+          {
+            "node": "Parse Gemini JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2a87303a-a1b4-4513-af03-c6f5403657c5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3b3b32018cba6bbb203e21ebd970ebce604eae6fe1dcb751f0be0ae156ee230a"
+  },
+  "id": "Gu0CSWOe4XYLyjhB",
+  "tags": []
+}
